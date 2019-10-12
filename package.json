@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "pretest": "rm -rf shorten_database",
     "test": "mocha specs/**/*.spec.js",
     "start": "node index.js"
   },
