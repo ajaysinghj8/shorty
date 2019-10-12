@@ -6,14 +6,17 @@ async function create({ url, shortcode }) {
     return await db.post({
         _id: new Date().toISOString(),
         url,
-        shortcode
+        shortcode,
+        startDate: new Date().toISOString(),
+        redirectCount: 0,
+        lastSeenDate: ''
     });
 }
 
-async function has({ shortcode }) {
+async function findByShortcode({ shortcode }) {
     return await db.find({
         selector: {shortcode: shortcode },
-        fields: ['_id', 'url', 'shortcode'],
+        fields: ['_id', 'url', 'shortcode','startDate', 'lastSeenDate', 'redirectCount'],
     });
 }
 
@@ -21,7 +24,15 @@ async function getByUrl({ url }) {
     return await db.find({ url })
 }
 
+async function update({shortcode}) {
+   const {docs}= await findByShortcode({shortcode});
+   const doc = docs[0];
+   doc.redirectCount = doc.redirectCount+1;
+   doc.lastSeenDate = new Date().toISOString();
+   return await db.put(doc); 
+}
+
 
 module.exports = {
-    create, has, getByUrl
+    create, findByShortcode, getByUrl, update
 };

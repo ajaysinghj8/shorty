@@ -31,7 +31,7 @@ async function createShortUrlHandler(ctx, next) {
         return;
     }
 
-    const { docs } = await ShortenStore.has(body);
+    const { docs } = await ShortenStore.findByShortcode(body);
     if (docs && docs.length) {
         ctx.status = 409;
         ctx.body = {
@@ -51,7 +51,7 @@ async function createShortUrlHandler(ctx, next) {
 
 async function redirectFromShortCodeHandler(ctx, next) {
     const { shortcode } = ctx.params;
-    const { docs } = await ShortenStore.has({ shortcode });
+    const { docs } = await ShortenStore.findByShortcode({ shortcode });
     if (!docs || !docs.length) {
         ctx.status = 404;
         ctx.body = {
@@ -59,12 +59,32 @@ async function redirectFromShortCodeHandler(ctx, next) {
         };
         return;
     }
+    // await ShortenStore.update({shortcode});
     const { url } = docs[0];
     ctx.status = 302;
     ctx.redirect(url);
 }
 
+
+async function redirectURLStatsHandler(ctx, next) {
+    const { shortcode } = ctx.params;
+    const { docs } = await ShortenStore.findByShortcode({ shortcode });
+    if (!docs || !docs.length) {
+        ctx.status = 404;
+        ctx.body = {
+            message: 'The shortcode cannot be found in the system'
+        };
+        return;
+    }
+    const { startDate, lastSeenDate, redirectCount } = docs[0];
+    ctx.status = 302;
+    ctx.body = {
+        startDate, lastSeenDate, redirectCount
+    };
+}
+
 module.exports = {
     createShortUrlHandler,
-    redirectFromShortCodeHandler
+    redirectFromShortCodeHandler,
+    redirectURLStatsHandler
 };
