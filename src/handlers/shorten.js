@@ -1,3 +1,4 @@
+const ShortenStore = require('../store/shorten');
 
 function isValidCreateShortURLRequestBody(body) {
     const regex = /^[0-9a-zA-Z_]{4,}$/;
@@ -21,6 +22,7 @@ function isValidCreateShortURLRequestBody(body) {
 async function createShortUrlHandler(ctx, next) {
     const { body } = ctx.request;
     const error = isValidCreateShortURLRequestBody(body);
+    
     if (error) {
         ctx.status = error.status;
         ctx.body = {
@@ -28,6 +30,18 @@ async function createShortUrlHandler(ctx, next) {
         };
         return;
     }
+    
+    const { docs } = await ShortenStore.has(body);
+    if (docs && docs.length > 1) {
+        ctx.status = 409;
+        ctx.body = {
+            message: 'The the desired shortcode is already in use. Shortcodes are case-sensitive.'
+        };
+        return;
+    }
+
+    await ShortenStore.create(body);
+
     ctx.status = 201;
     ctx.body = {
         shortcode: body.shortcode
