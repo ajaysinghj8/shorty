@@ -1,6 +1,6 @@
 const { expect } = require('chai');
 const supertest = require('supertest');
-
+const { rmdirSync } = require('fs');
 const app = require('../src/server');
 
 let server;
@@ -53,6 +53,23 @@ describe('API spec', () => {
             .expect('Content-Type', /json/)
             .expect(({ body }) => {
                 expect(body.message).to.be.eq('The shortcode fails to meet the following regexp: ^[0-9a-zA-Z_]{4,}$.');
+            });
+    });
+
+    it('should redirect to example.com', async () => {
+        await request
+            .get('/example')
+            .expect(302)
+            .expect('Location', 'http://example.com');
+    });
+
+
+    it('should response 404', async () => {
+        await request
+            .get('/xyz')
+            .expect(404)
+            .expect(({ body }) => {
+                expect(body.message).to.be.eq('The shortcode cannot be found in the system');
             });
     });
 

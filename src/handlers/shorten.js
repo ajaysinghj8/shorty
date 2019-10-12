@@ -22,7 +22,7 @@ function isValidCreateShortURLRequestBody(body) {
 async function createShortUrlHandler(ctx, next) {
     const { body } = ctx.request;
     const error = isValidCreateShortURLRequestBody(body);
-    
+
     if (error) {
         ctx.status = error.status;
         ctx.body = {
@@ -30,9 +30,9 @@ async function createShortUrlHandler(ctx, next) {
         };
         return;
     }
-    
+
     const { docs } = await ShortenStore.has(body);
-    if (docs && docs.length > 1) {
+    if (docs && docs.length) {
         ctx.status = 409;
         ctx.body = {
             message: 'The the desired shortcode is already in use. Shortcodes are case-sensitive.'
@@ -49,6 +49,22 @@ async function createShortUrlHandler(ctx, next) {
 }
 
 
+async function redirectFromShortCodeHandler(ctx, next) {
+    const { shortcode } = ctx.params;
+    const { docs } = await ShortenStore.has({ shortcode });
+    if (!docs || !docs.length) {
+        ctx.status = 404;
+        ctx.body = {
+            message: 'The shortcode cannot be found in the system'
+        };
+        return;
+    }
+    const { url } = docs[0];
+    ctx.status = 302;
+    ctx.redirect(url);
+}
+
 module.exports = {
-    createShortUrlHandler
+    createShortUrlHandler,
+    redirectFromShortCodeHandler
 };
